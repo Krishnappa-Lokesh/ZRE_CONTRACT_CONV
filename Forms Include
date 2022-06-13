@@ -1,0 +1,897 @@
+*&---------------------------------------------------------------------*
+*& Include          ZRE_CONTRACT_CONV_FORMS
+*&---------------------------------------------------------------------*
+FORM read_files.
+  REFRESH: lt_alv_table.
+
+  PERFORM read_file TABLES lt_tdwkey01 USING p_file01 'GENERAL_DATA-'  CHANGING  ls_header_record01.
+  PERFORM read_file TABLES lt_tdwkey02 USING p_file02 'PARTNER-'  CHANGING  ls_header_record02.
+  PERFORM read_file TABLES lt_tdwkey03 USING p_file03 'RENEWAL-' CHANGING  ls_header_record03.
+  PERFORM read_file TABLES lt_tdwkey04 USING p_file04 'NOTICE-' CHANGING  ls_header_record04.
+  PERFORM read_file TABLES lt_tdwkey05 USING p_file05 'OBJECTS-' CHANGING  ls_header_record05.
+  PERFORM read_file TABLES lt_tdwkey06 USING p_file06 'FREQUENCY-' CHANGING  ls_header_record06.
+  PERFORM read_file TABLES lt_tdwkey07 USING p_file07 'ORG_ASSIGN-' CHANGING  ls_header_record07.
+  PERFORM read_file TABLES lt_tdwkey08 USING p_file08  'CONDITIONS-' CHANGING  ls_header_record08.
+  PERFORM read_file TABLES lt_tdwkey09 USING p_file09  'CLAUSE-' CHANGING  ls_header_record09. "Not Mapped
+  PERFORM read_file TABLES lt_tdwkey10 USING p_file10  'REMINDER-' CHANGING  ls_header_record10. "Not Mapped
+  PERFORM read_file TABLES lt_tdwkey11 USING p_file11  'VALUATION-'  CHANGING  ls_header_record11.
+
+ENDFORM.
+
+FORM process_files.
+
+  lv_test_run = p_test.
+
+
+
+  LOOP AT lt_tdwkey01 INTO DATA(ls_data01).
+
+    PERFORM refresh_bapi_parameters.
+
+    PERFORM assign_fields TABLES lt_tdwkey01  USING ls_data01 'GENERAL_DATA-'  ls_header_record01.
+    PERFORM assign_fields TABLES lt_tdwkey02  USING ls_data01 'PARTNER-'    ls_header_record02.
+    PERFORM assign_fields TABLES lt_tdwkey03  USING ls_data01 'RENEWAL-'    ls_header_record03.
+    PERFORM assign_fields TABLES lt_tdwkey04  USING ls_data01 'NOTICE-'    ls_header_record04.
+    PERFORM assign_fields TABLES lt_tdwkey05  USING ls_data01 'OBJECTS-'    ls_header_record05.
+    PERFORM assign_fields TABLES lt_tdwkey06  USING ls_data01 'FREQUENCY-'    ls_header_record06.
+    PERFORM assign_fields TABLES lt_tdwkey07  USING ls_data01 'ORG_ASSIGN-'    ls_header_record07.
+    PERFORM assign_fields TABLES lt_tdwkey08  USING ls_data01 'CONDITIONS-'    ls_header_record08.
+    PERFORM assign_fields TABLES lt_tdwkey09  USING ls_data01 'CLAUSE-'    ls_header_record09.
+    PERFORM assign_fields TABLES lt_tdwkey10  USING ls_data01 'REMINDER-'    ls_header_record10.
+    PERFORM assign_fields TABLES lt_tdwkey11  USING ls_data01 'VALUATION-'    ls_header_record11.
+
+
+*//-- Fill export parameters
+    lv_comp_code_ext =       lt_map_table[ counter = 1 bapi_field = 'COMP_CODE_EXT' ]-data_value.
+    lv_contract_number_ext = lt_map_table[ counter = 1 bapi_field = 'CONTRACT_NUMBER_EXT' ]-data_value.
+    lv_contract_type =       lt_map_table[ counter = 1 bapi_field = 'CONTRACT_TYPE' ]-data_value.
+    PERFORM fill_bapi_structure USING  'CONTRACT' 'BAPI_RE_CONTRACT_DAT'.
+    PERFORM fill_bapi_structure USING  'TERM_RENEWAL' 'BAPI_RE_TERM_RN_DAT'.
+    PERFORM fill_bapi_structure USING  'TERM_NOTICE' 'BAPI_RE_TERM_NT_DAT'.
+
+
+*//-- Fill table parameters
+    PERFORM fill_bapi_table TABLES lt_tdwkey03  lt_term_renewal_rule  USING  'TERM_RENEWAL_RULE '  'BAPI_RE_TERM_RN_RULE_DAT'.
+    PERFORM fill_bapi_table TABLES lt_tdwkey04  lt_term_notice_obj  USING  'TERM_NOTICE_OBJ '  'BAPI_RE_TERM_NT_OBJ_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_term_notice_rule  USING  'TERM_NOTICE_RULE '  'BAPI_RE_TERM_NT_RULE_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_term_object_rel  USING  'TERM_OBJECT_REL '  'BAPI_RE_TERM_OBJREL_DAT'.
+    PERFORM fill_bapi_table TABLES lt_tdwkey07  lt_term_org_assignment  USING  'TERM_ORG_ASSIGNMENT '  'BAPI_RE_TERM_OA_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_term_payment  USING  'TERM_PAYMENT '  'BAPI_RE_TERM_PY_DAT'.
+    PERFORM fill_bapi_table TABLES lt_tdwkey06  lt_term_rhythm  USING  'TERM_RHYTHM '  'BAPI_RE_TERM_RH_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_term_adjustment  USING  'TERM_ADJUSTMENT '  'BAPI_RE_TERM_AJ_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_term_sr_reporting  USING  'TERM_SR_REPORTING '  'BAPI_RE_TERM_SR_REP_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_term_sr_sales  USING  'TERM_SR_SALES '  'BAPI_RE_TERM_SR_SL_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_term_sr_peak_sales  USING  'TERM_SR_PEAK_SALES '  'BAPI_RE_TERM_SR_PS_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_term_sr_rhythm   USING  'TERM_SR_RHYTHM '  'BAPI_RE_TERM_SR_RH_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_act_deposit  USING  'ACT_DEPOSIT '  'BAPI_RE_ACT_DEPOSIT_DAT'.
+    PERFORM fill_bapi_table TABLES lt_tdwkey02  lt_partner  USING  'PARTNER '  'BAPI_RE_PARTNER_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_option_rate   USING  'OPTION_RATE '  'BAPI_RE_OPTION_RATE_DAT'.
+    PERFORM fill_bapi_table TABLES lt_tdwkey05  lt_object_rel  USING  'OBJECT_REL '  'BAPI_RE_OBJECT_REL_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_meas_cn  USING  'MEAS_CN '  'BAPI_RE_MEAS_CN_DAT'.
+    PERFORM fill_bapi_table TABLES lt_tdwkey08  lt_condition  USING  'CONDITION '  'BAPI_RE_CONDITION_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_resubm_rule  USING  'RESUBM_RULE '  'BAPI_RE_RESUBM_RULE_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_status  USING  'STATUS '  'BAPI_RE_STATUS_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_extension_in  USING  'EXTENSION_IN '  'BAPIPAREX'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  LT_RETURN  USING  'RETURN '  'BAPIRET2'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_term_withholding_tax  USING  'TERM_WITHHOLDING_TAX '  'BAPI_RE_TERM_WT_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_term_withholding_tax_item  USING  'TERM_WITHHOLDING_TAX_ITEM '  'BAPI_RE_TERM_WT_ITEM_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_cosettle_rule  USING  'COSETTLE_RULE '  'BAPI_RE_COSETTLE_RL_DAT'.
+*    PERFORM fill_bapi_table TABLES lt_tdwkey??  lt_term_payment_split  USING  'TERM_PAYMENT_SPLIT '  'BAPI_RE_TERM_PYSPLIT_DAT'.
+    PERFORM fill_bapi_table TABLES lt_tdwkey11  lt_term_evaluation  USING  'TERM_EVALUATION '  'BAPI_RE_TERM_CE_DAT'.
+    PERFORM fill_bapi_table TABLES lt_tdwkey11  lt_term_evaluation_condition  USING  'TERM_EVALUATION_CONDITION '  'BAPI_RE_TERM_CECOND_DAT'.
+
+    IF  lv_comp_code_ext IS INITIAL.
+      CONTINUE.
+    ENDIF.
+
+*-- Additional field mapping for TERM_EVALUATION
+    LOOP AT lt_term_evaluation ASSIGNING FIELD-SYMBOL(<lt_term_evaluation>).
+      <lt_term_evaluation>-status_valuation_rule = 'C'.  " when C END_DATE_OF_USAGE  cannot be blank
+      IF <lt_term_evaluation>-probable_end = ''.
+        <lt_term_evaluation>-probable_end = '00000000'.
+      ENDIF.
+      IF <lt_term_evaluation>-end_date_of_usage = ''.
+        <lt_term_evaluation>-end_date_of_usage = '00000000'.
+      ENDIF.
+    ENDLOOP.
+
+*-- Additional field mapping for TERM_EVALUATION_CONDITION
+    LOOP AT lt_term_evaluation_condition ASSIGNING FIELD-SYMBOL(<lt_term_evaluation_condition>).
+      IF <lt_term_evaluation_condition>-condition_consideration = 'O'.
+        <lt_term_evaluation_condition>-term_no =  '0001'.
+        <lt_term_evaluation_condition>-condition_valuation_property =  'A'.
+        <lt_term_evaluation_condition>-indicator_consider_condition =  'X'.
+        <lt_term_evaluation_condition>-status_valuation_rule = 'C'.
+        READ TABLE lt_condition INTO DATA(ls_condition) INDEX  1.
+        IF sy-subrc = 0.
+          <lt_term_evaluation_condition>-condition_external_purpose = ls_condition-external_purpose.
+          <lt_term_evaluation_condition>-condition_type = ls_condition-condition_type.
+          <lt_term_evaluation_condition>-condition_object_type = ls_condition-calculation_object_type.
+          <lt_term_evaluation_condition>-condition_object_id = ls_condition-calculation_object_id.
+          <lt_term_evaluation_condition>-condition_valid_from = ls_condition-valid_from.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+
+
+
+*-- Account assignment substitution.
+    SELECT SINGLE * FROM zabapconstants INTO @DATA(ls_zabapconstants)
+      WHERE progname = 'RECN'
+        AND low = @lv_contract_type.
+    IF sy-subrc = 0.
+      LOOP AT lt_term_org_assignment ASSIGNING FIELD-SYMBOL(<ls_term_org_assignment>).
+
+        SELECT SINGLE * FROM ztre_acntasn
+          INTO @DATA(ls_ztre_acntasn)
+          WHERE recntype = @lv_contract_type
+            AND gsber = @<ls_term_org_assignment>-bus_area.
+        IF sy-subrc = 0.
+          <ls_term_org_assignment>-func_area = ls_ztre_acntasn-fkber.
+          <ls_term_org_assignment>-fund = ls_ztre_acntasn-geber.
+          <ls_term_org_assignment>-funds_ctr = ls_ztre_acntasn-fistl.
+          <ls_term_org_assignment>-grant_nbr = ls_ztre_acntasn-grant_nbr.
+
+          LOOP AT lt_object_rel ASSIGNING FIELD-SYMBOL(<ls_object_rel>).
+            <ls_object_rel>-object_type_acct = 'KS'.
+            <ls_object_rel>-object_id_acct   = 'ARK' && | { ls_ztre_acntasn-kostl ALPHA = IN }  |.
+          ENDLOOP.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+
+
+
+
+*-- Finally Call BAPI to create CONTRACT
+    CALL FUNCTION 'BAPI_RE_CN_CREATE'
+      EXPORTING
+        comp_code_ext             = lv_comp_code_ext
+        contract_type             = lv_contract_type
+        contract_number_ext       = lv_contract_number_ext
+        contract                  = ls_contract
+        term_renewal              = ls_term_renewal
+        term_notice               = ls_term_notice
+        trans                     = lv_trans
+        test_run                  = lv_test_run
+        cosettle_param            = lv_cosettle_param
+      IMPORTING
+        compcode                  = lv_comp_code
+        contractnumber            = lv_contract_number
+      TABLES
+        term_renewal_rule         = lt_term_renewal_rule
+        term_notice_obj           = lt_term_notice_obj
+        term_notice_rule          = lt_term_notice_rule
+        term_object_rel           = lt_term_object_rel
+        term_org_assignment       = lt_term_org_assignment
+        term_payment              = lt_term_payment
+        term_rhythm               = lt_term_rhythm
+        term_adjustment           = lt_term_adjustment
+        term_sr_reporting         = lt_term_sr_reporting
+        term_sr_sales             = lt_term_sr_sales
+        term_sr_peak_sales        = lt_term_sr_peak_sales
+        term_sr_rhythm            = lt_term_sr_rhythm
+        act_deposit               = lt_act_deposit
+        partner                   = lt_partner
+        option_rate               = lt_option_rate
+        object_rel                = lt_object_rel
+        meas_cn                   = lt_meas_cn
+        condition                 = lt_condition
+        resubm_rule               = lt_resubm_rule
+        status                    = lt_status
+        extension_in              = lt_extension_in
+        return                    = lt_return
+        term_withholding_tax      = lt_term_withholding_tax
+        term_withholding_tax_item = lt_term_withholding_tax_item
+        cosettle_rule             = lt_cosettle_rule
+        term_payment_split        = lt_term_payment_split
+        term_evaluation           = lt_term_evaluation
+        term_evaluation_condition = lt_term_evaluation_condition.
+
+    IF NOT line_exists( lt_return[ type = 'E' ] )
+      AND lv_test_run = abap_false.
+
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'
+*       IMPORTING
+*         RETURN        =
+        .
+    ENDIF.
+
+
+
+    READ TABLE lt_return INTO DATA(ls_return_c)
+    WITH KEY type = 'E'.
+    IF sy-subrc = 0.
+
+      LOOP AT lt_return INTO DATA(ls_return_cl) WHERE type = 'E'.
+
+        APPEND INITIAL LINE TO lt_alv_table ASSIGNING FIELD-SYMBOL(<ls_alv_table_e>).
+        <ls_alv_table_e>-light = icon_red_light.
+        <ls_alv_table_e>-comp_code_ext = lv_comp_code_ext.
+        <ls_alv_table_e>-contract_type = lv_contract_type.
+        <ls_alv_table_e>-old_contract_number = ls_contract-old_contract_number.
+        <ls_alv_table_e>-comp_code  = lv_comp_code.
+        <ls_alv_table_e>-contract_number = |{ lv_contract_number ALPHA = OUT }|.
+        <ls_alv_table_e>  = CORRESPONDING #( BASE ( <ls_alv_table_e> ) ls_return_cl ).
+        <ls_alv_table_e>-type = ls_return_cl-type.
+        <ls_alv_table_e>-id = ls_return_cl-id.
+        <ls_alv_table_e>-number = ls_return_cl-number.
+        <ls_alv_table_e>-message = ls_return_cl-message.
+
+      ENDLOOP.
+
+    ELSE.
+      APPEND INITIAL LINE TO lt_alv_table ASSIGNING FIELD-SYMBOL(<ls_alv_table_s>).
+      <ls_alv_table_s>-light = icon_green_light.
+      <ls_alv_table_s>-comp_code_ext = lv_comp_code_ext.
+      <ls_alv_table_s>-contract_type = lv_contract_type.
+      <ls_alv_table_s>-old_contract_number = ls_contract-old_contract_number.
+      <ls_alv_table_s>-comp_code  = lv_comp_code.
+      <ls_alv_table_s>-contract_number = |{ lv_contract_number ALPHA = OUT }|.
+      <ls_alv_table_s>  = CORRESPONDING #( BASE ( <ls_alv_table_s> ) ls_return_c ).
+      IF lv_test_run = abap_true.
+        CLEAR : <ls_alv_table_s>-type,
+        <ls_alv_table_s>-id,
+        <ls_alv_table_s>-number.
+        <ls_alv_table_s>-message = 'Contract creation successfully simulated'.
+      ELSE.
+        <ls_alv_table_s>-type = ls_return_c-type.
+        <ls_alv_table_s>-id = ls_return_c-id.
+        <ls_alv_table_s>-number = ls_return_c-number.
+        IF lv_contract_number IS NOT INITIAL.
+          <ls_alv_table_s>-message = 'Contract created'.
+        ELSE.
+          <ls_alv_table_s>-message = 'Contract not created - Something went wrong'.
+
+        ENDIF.
+      ENDIF.
+    ENDIF.
+
+*    LOOP AT lt_return INTO DATA(ls_return_c).
+*
+*      APPEND INITIAL LINE TO lt_alv_table ASSIGNING FIELD-SYMBOL(<ls_alv_table>).
+*      IF lv_contract_number IS NOT INITIAL.
+*        <ls_alv_table>-light = icon_green_light.
+*      ELSE.
+*        IF ls_return_c-type = 'E'.
+*          <ls_alv_table>-light = icon_red_light.
+*        ELSE.
+*          <ls_alv_table>-light = icon_yellow_light.
+*        ENDIF.
+*      ENDIF.
+*      <ls_alv_table>-comp_code_ext = lv_comp_code_ext.
+*      <ls_alv_table>-contract_type = lv_contract_type.
+*      <ls_alv_table>-old_contract_number = ls_contract-old_contract_number.
+*      <ls_alv_table>-comp_code  = lv_comp_code.
+*      <ls_alv_table>-contract_number = |{ lv_contract_number ALPHA = OUT }|.
+*      <ls_alv_table>  = CORRESPONDING #( BASE ( <ls_alv_table> ) ls_return_c ).
+*      <ls_alv_table>-type = ls_return_c-type.
+*      <ls_alv_table>-id = ls_return_c-id.
+*      <ls_alv_table>-number = ls_return_c-number.
+*      <ls_alv_table>-message = ls_return_c-message.
+*
+*    ENDLOOP.
+
+  ENDLOOP.
+ENDFORM.
+FORM  assign_fields
+  TABLES lt_tdwkey TYPE tt_tdwkey
+  USING ls_data TYPE LINE OF tt_tdwkey
+        target_file_nm ls_header_record.
+
+  IF line_exists( lt_tdwkey[
+       comp_code_ext = ls_data-comp_code_ext
+       old_contract_number = ls_data-old_contract_number
+     ] ).
+
+
+*    DATA(lv_data_str) =
+*    lt_tdwkey[ comp_code_ext = ls_data-comp_code_ext
+*                 old_contract_number = ls_data-old_contract_number ]-data.
+
+    DATA lv_data_line_counter TYPE i VALUE IS INITIAL.
+
+    LOOP AT lt_tdwkey INTO DATA(lv_data_str)
+      WHERE comp_code_ext = ls_data-comp_code_ext
+        AND old_contract_number = ls_data-old_contract_number.
+
+      lv_data_line_counter = lv_data_line_counter + 1.
+
+      SPLIT ls_header_record AT cl_abap_char_utilities=>horizontal_tab INTO TABLE DATA(lt_field_header).
+      SPLIT lv_data_str-data AT cl_abap_char_utilities=>horizontal_tab INTO TABLE DATA(lt_field_data).
+
+      LOOP AT lt_field_header ASSIGNING FIELD-SYMBOL(<ls_field_header>).
+        CONDENSE <ls_field_header>.
+      ENDLOOP.
+
+
+      LOOP AT lt_field_data INTO DATA(ls_field_data).
+        DATA(lv_tabix) = sy-tabix.
+
+        DATA(lv_data_field) = target_file_nm && lt_field_header[ lv_tabix ].
+        IF line_exists( lt_map_table[ data_field = lv_data_field ] ).
+
+          IF line_exists( lt_map_table[ counter = lv_data_line_counter data_field = lv_data_field ] ).
+            lt_map_table[ counter = lv_data_line_counter data_field = lv_data_field ]-data_value = ls_field_data.
+          ELSE.
+
+            DATA(ls_reference_mapping_record) = lt_map_table[ counter = 1 data_field = lv_data_field ].
+            ls_reference_mapping_record-counter = lv_data_line_counter.
+            ls_reference_mapping_record-data_value = ls_field_data.
+            APPEND ls_reference_mapping_record TO lt_map_table.
+
+          ENDIF.
+        ENDIF.
+
+      ENDLOOP.
+
+    ENDLOOP.
+  ENDIF.
+ENDFORM.
+
+FORM fill_bapi_structure USING  bapi_parameter parameter_type.
+
+  DATA(lt_bapi_field_list) = CAST cl_abap_structdescr(
+    cl_abap_typedescr=>describe_by_name( parameter_type ) )->components .
+
+  LOOP AT lt_bapi_field_list INTO DATA(ls_bapi_field).
+    DATA(lv_field_name) = to_upper( 'ls_' && bapi_parameter && '-' && ls_bapi_field-name ).
+    DATA(lv_bapi_field_name) = to_upper( bapi_parameter && '-' && ls_bapi_field-name ).
+    ASSIGN (lv_field_name) TO FIELD-SYMBOL(<field_name>).
+    IF line_exists( lt_map_table[ counter = 1 bapi_field = lv_bapi_field_name ] ).
+*
+      CASE ls_bapi_field-type_kind.
+        WHEN  'D'.
+
+          DATA: lv_input_value TYPE sy-datum.
+          DATA: lv_date_external(10) TYPE c.
+          lv_input_value = lt_map_table[ counter = 1 bapi_field = lv_bapi_field_name ]-data_value.
+
+          CALL FUNCTION 'CONVERT_DATE_TO_EXTERNAL'
+            EXPORTING
+              date_internal            = lv_input_value
+            IMPORTING
+              date_external            = lv_date_external
+            EXCEPTIONS
+              date_internal_is_invalid = 1
+              OTHERS                   = 2.
+          IF sy-subrc <> 0.
+            <field_name> = lv_input_value.
+            "generate error message
+          ELSE.
+            CALL FUNCTION 'CONVERT_DATE_TO_INTERNAL'
+              EXPORTING
+                date_external            = lv_date_external
+                accept_initial_date      = abap_true
+              IMPORTING
+                date_internal            = <field_name>
+              EXCEPTIONS
+                date_external_is_invalid = 1
+                OTHERS                   = 2.
+            IF sy-subrc <> 0.
+              <field_name> = lv_input_value.
+              "generate error message
+            ENDIF.
+          ENDIF.
+        WHEN OTHERS.
+          <field_name> = lt_map_table[ counter = 1 bapi_field = lv_bapi_field_name ]-data_value.
+*          CONDENSE <field_name>.
+      ENDCASE.
+    ENDIF.
+  ENDLOOP.
+
+ENDFORM.
+
+
+FORM fill_bapi_table
+  TABLES lt_data_table TYPE tt_tdwkey
+          lt_bapi_table
+  USING  bapi_parameter
+        parameter_type.
+
+  LOOP AT lt_data_table INTO DATA(ls_data_table).
+    DATA(lv_data_line_index) = sy-tabix.
+
+    APPEND INITIAL LINE TO lt_bapi_table ASSIGNING FIELD-SYMBOL(<ls_bapi_table_structure>).
+    DATA(lv_bapi_table_index) = sy-tabix.
+    DATA(lv_data_present) = abap_false.
+
+*-- retrive fieldnames using parameter type
+    DATA(lt_bapi_field_list) = CAST cl_abap_structdescr(
+      cl_abap_typedescr=>describe_by_name( parameter_type ) )->components .
+
+*-- Loop at fieldlist and assign values from mapping table
+    LOOP AT lt_bapi_field_list INTO DATA(ls_bapi_field).
+      DATA(lv_field_name) = '<ls_bapi_table_structure>-' && ls_bapi_field-name.
+      DATA(lv_bapi_field_name) = to_upper( bapi_parameter && '-' && ls_bapi_field-name ).
+      ASSIGN (lv_field_name) TO FIELD-SYMBOL(<field_name>).
+      IF line_exists( lt_map_table[ counter = lv_data_line_index bapi_field = lv_bapi_field_name ] ).
+
+        CASE ls_bapi_field-type_kind.
+          WHEN  'D'.
+
+            DATA: lv_input_value TYPE sy-datum.
+            DATA: lv_date_external(10) TYPE c.
+            lv_input_value = lt_map_table[ counter = lv_data_line_index bapi_field = lv_bapi_field_name ]-data_value.
+
+            CALL FUNCTION 'CONVERT_DATE_TO_EXTERNAL'
+              EXPORTING
+                date_internal            = lv_input_value
+              IMPORTING
+                date_external            = lv_date_external
+              EXCEPTIONS
+                date_internal_is_invalid = 1
+                OTHERS                   = 2.
+            IF sy-subrc <> 0.
+              <field_name> = lv_input_value.
+              "generate error message
+            ELSE.
+              CALL FUNCTION 'CONVERT_DATE_TO_INTERNAL'
+                EXPORTING
+                  date_external            = lv_date_external
+                  accept_initial_date      = abap_true
+                IMPORTING
+                  date_internal            = <field_name>
+                EXCEPTIONS
+                  date_external_is_invalid = 1
+                  OTHERS                   = 2.
+              IF sy-subrc <> 0.
+                <field_name> = lv_input_value.
+                "generate error message
+              ENDIF.
+            ENDIF.
+          WHEN OTHERS.
+            <field_name> = lt_map_table[ counter = lv_data_line_index  bapi_field = lv_bapi_field_name ]-data_value.
+*            CONDENSE <field_name>.
+        ENDCASE.
+
+        IF <field_name> IS NOT INITIAL
+          AND <field_name> <> ''
+          AND <field_name> <> '00000000'.
+          lv_data_present = abap_true.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+
+    IF <ls_bapi_table_structure> IS INITIAL
+      OR lv_data_present = abap_false.
+      DELETE lt_bapi_table INDEX lv_bapi_table_index.
+    ENDIF.
+
+  ENDLOOP.
+ENDFORM.
+
+
+FORM build_field_catalog.
+
+  REFRESH: lt_fieldcat.
+  APPEND INITIAL LINE TO lt_fieldcat ASSIGNING FIELD-SYMBOL(<ls_fieldcat_light>).
+  <ls_fieldcat_light>-reptext_ddic = 'Status'.
+  <ls_fieldcat_light>-fieldname = 'LIGHT'.
+  <ls_fieldcat_light>-tabname = 'IT_ALV_OUTPUT'.
+  <ls_fieldcat_light>-outputlen = '4'.
+  <ls_fieldcat_light>-icon = 'X'.
+  <ls_fieldcat_light>-col_pos = 1.
+
+
+  APPEND INITIAL LINE TO lt_fieldcat ASSIGNING FIELD-SYMBOL(<ls_fieldcat_cce>).
+  <ls_fieldcat_cce>-reptext_ddic = 'Co Cd Ext'.
+  <ls_fieldcat_cce>-fieldname = 'COMP_CODE_EXT'.
+  <ls_fieldcat_cce>-tabname = 'IT_ALV_OUTPUT'.
+  <ls_fieldcat_cce>-outputlen = '6'.
+  <ls_fieldcat_cce>-key = abap_true.
+  <ls_fieldcat_cce>-col_pos = 2.
+
+  APPEND INITIAL LINE TO lt_fieldcat ASSIGNING FIELD-SYMBOL(<ls_fieldcat_ctyp>).
+  <ls_fieldcat_ctyp>-reptext_ddic = 'Cn Typ'.
+  <ls_fieldcat_ctyp>-fieldname = 'CONTRACT_TYPE'.
+  <ls_fieldcat_ctyp>-tabname = 'IT_ALV_OUTPUT'.
+  <ls_fieldcat_ctyp>-outputlen = '6'.
+  <ls_fieldcat_ctyp>-key = abap_true.
+  <ls_fieldcat_ctyp>-col_pos = 3.
+
+  APPEND INITIAL LINE TO lt_fieldcat ASSIGNING FIELD-SYMBOL(<ls_fieldcat_ocn>).
+  <ls_fieldcat_ocn>-reptext_ddic = 'Old Contract No'.
+  <ls_fieldcat_ocn>-fieldname = 'OLD_CONTRACT_NUMBER'.
+  <ls_fieldcat_ocn>-tabname = 'IT_ALV_OUTPUT'.
+  <ls_fieldcat_ocn>-outputlen = '20'.
+  <ls_fieldcat_ocn>-key = abap_true.
+  <ls_fieldcat_ocn>-col_pos = 4.
+
+  APPEND INITIAL LINE TO lt_fieldcat ASSIGNING FIELD-SYMBOL(<ls_fieldcat_cc>).
+  <ls_fieldcat_cc>-reptext_ddic = 'Co Cd'.
+  <ls_fieldcat_cc>-fieldname = 'COMP_CODE'.
+  <ls_fieldcat_cc>-tabname = 'IT_ALV_OUTPUT'.
+  <ls_fieldcat_cc>-outputlen = '6'.
+  <ls_fieldcat_cc>-key = abap_true.
+  <ls_fieldcat_cc>-col_pos = 5.
+
+  APPEND INITIAL LINE TO lt_fieldcat ASSIGNING FIELD-SYMBOL(<ls_fieldcat_cn>).
+  <ls_fieldcat_cn>-reptext_ddic = 'Contract No'.
+  <ls_fieldcat_cn>-fieldname = 'CONTRACT_NUMBER'.
+  <ls_fieldcat_cn>-tabname = 'IT_ALV_OUTPUT'.
+  <ls_fieldcat_cn>-outputlen = '13'.
+  <ls_fieldcat_cn>-key = abap_true.
+  <ls_fieldcat_cn>-col_pos = 6.
+
+  APPEND INITIAL LINE TO lt_fieldcat ASSIGNING FIELD-SYMBOL(<ls_fieldcat_type>).
+  <ls_fieldcat_type>-reptext_ddic = 'Type'.
+  <ls_fieldcat_type>-fieldname = 'TYPE'.
+  <ls_fieldcat_type>-tabname = 'IT_ALV_OUTPUT'.
+  <ls_fieldcat_type>-outputlen = '4'.
+  <ls_fieldcat_type>-col_pos = 7.
+
+  APPEND INITIAL LINE TO lt_fieldcat ASSIGNING FIELD-SYMBOL(<ls_fieldcat_mid>).
+  <ls_fieldcat_mid>-reptext_ddic = 'Message Id'.
+  <ls_fieldcat_mid>-fieldname = 'ID'.
+  <ls_fieldcat_mid>-tabname = 'IT_ALV_OUTPUT'.
+  <ls_fieldcat_mid>-outputlen = '10'.
+  <ls_fieldcat_mid>-col_pos = 8.
+
+  APPEND INITIAL LINE TO lt_fieldcat ASSIGNING FIELD-SYMBOL(<ls_fieldcat_no>).
+  <ls_fieldcat_no>-reptext_ddic = 'Number'.
+  <ls_fieldcat_no>-fieldname = 'NUMBER'.
+  <ls_fieldcat_no>-tabname = 'IT_ALV_OUTPUT'.
+  <ls_fieldcat_no>-outputlen = '6'.
+  <ls_fieldcat_no>-col_pos = 9.
+
+  APPEND INITIAL LINE TO lt_fieldcat ASSIGNING FIELD-SYMBOL(<ls_fieldcat_msg>).
+  <ls_fieldcat_msg>-reptext_ddic = 'Message'.
+  <ls_fieldcat_msg>-fieldname = 'MESSAGE'.
+  <ls_fieldcat_msg>-tabname = 'IT_ALV_OUTPUT'.
+  <ls_fieldcat_msg>-outputlen = '220'.
+  <ls_fieldcat_msg>-col_pos = 10.
+
+ENDFORM. "build_field_catalog
+
+
+
+FORM display_alv_output.
+  DATA: ls_layout TYPE slis_layout_alv.
+  ls_layout-coltab_fieldname = 'TCOLOR'.
+  ls_layout-info_fieldname = 'COLOR_LINE'.
+  ls_layout-zebra = abap_true.
+  ls_layout-colwidth_optimize = abap_true.
+
+  PERFORM build_field_catalog.
+
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+*     i_structure_name = 'LS_ALV_TABLE'
+      is_layout   = ls_layout
+      it_fieldcat = lt_fieldcat
+    TABLES
+      t_outtab    = lt_alv_table.
+ENDFORM.
+
+
+
+FORM data_fr_ref_contract.
+  lv_comp_code = '1000'.
+  lv_contract_number = '20000000'. "p_cont.
+
+*//-- Get Contract details
+  CALL FUNCTION 'BAPI_RE_CN_GET_DETAIL'
+    EXPORTING
+      compcode                  = lv_comp_code
+      contractnumber            = lv_contract_number
+*     DETAIL_DATA_FROM          =
+*     DETAIL_DATA_TO            =
+    IMPORTING
+      contract                  = ls_g_contract
+      term_renewal              = ls_g_term_renewal
+      term_notice               = ls_g_term_notice
+      cosettle_param            = ls_g_cosettle_param
+    TABLES
+      term_renewal_rule         = lt_g_term_renewal_rule
+      term_notice_obj           = lt_g_term_notice_obj
+      term_notice_rule          = lt_g_term_notice_rule
+      term_object_rel           = lt_g_term_object_rel
+      term_org_assignment       = lt_g_term_org_assignment
+      term_payment              = lt_g_term_payment
+      term_rhythm               = lt_g_term_rhythm
+      term_adjustment           = lt_g_term_adjustment
+      term_sr_reporting         = lt_g_term_sr_reporting
+      term_sr_sales             = lt_g_term_sr_sales
+      term_sr_peak_sales        = lt_g_term_sr_peak_sales
+      term_sr_rhythm            = lt_g_term_sr_rhythm
+      act_deposit               = lt_g_act_deposit
+      partner                   = lt_g_partner
+      option_rate               = lt_g_option_rate
+      object_rel                = lt_g_object_rel
+      meas_cn                   = lt_g_meas_cn
+      condition                 = lt_g_condition
+      cond_calc                 = lt_g_cond_calc
+      cond_dist                 = lt_g_cond_dist
+      resubm_rule               = lt_g_resubm_rule
+      resubm_date               = lt_g_resubm_date
+      status                    = lt_g_status
+      extension_out             = lt_g_extension_out
+      return                    = lt_g_return
+      term_withholding_tax      = lt_g_term_withholding_tax
+      term_withholding_tax_item = lt_g_term_withholding_tax_item
+      cosettle_rule             = lt_g_cosettle_rule
+      term_payment_split        = lt_g_term_payment_split
+      term_evaluation           = lt_g_term_evaluation
+      term_evaluation_condition = lt_g_term_evaluation_condition.
+
+  WRITE:/ 'Return from getDetail'.
+  LOOP AT lt_g_return INTO DATA(ls_return).
+    WRITE:/ ls_return-message.
+  ENDLOOP.
+
+
+
+*//-- Test data
+  lv_comp_code_ext = '1000'.
+  lv_contract_number_ext = '100004'.
+  lv_contract_type = 'CU01'.
+  ls_contract = CORRESPONDING #( ls_g_contract ).
+  ls_term_renewal = CORRESPONDING #( ls_g_term_renewal ).
+  ls_term_notice = CORRESPONDING #( ls_g_term_notice ).
+*lv_trans
+  lv_test_run = p_test.
+*lv_cosettle_param
+
+  lt_term_renewal_rule = CORRESPONDING #( lt_g_term_renewal_rule ).
+  lt_term_notice_obj = CORRESPONDING #( lt_g_term_notice_obj ).
+  lt_term_notice_rule = CORRESPONDING #( lt_g_term_notice_rule ).
+  lt_term_object_rel = CORRESPONDING #( lt_g_term_object_rel ).
+  lt_term_org_assignment = CORRESPONDING #( lt_g_term_org_assignment ).
+  lt_term_payment = CORRESPONDING #( lt_g_term_payment ).
+  lt_term_rhythm = CORRESPONDING #( lt_g_term_rhythm ).
+  lt_term_adjustment = CORRESPONDING #( lt_g_term_adjustment ).
+  lt_term_sr_reporting = CORRESPONDING #( lt_g_term_sr_reporting ).
+  lt_term_sr_sales = CORRESPONDING #( lt_g_term_sr_sales ).
+  lt_term_sr_peak_sales = CORRESPONDING #( lt_g_term_sr_peak_sales ).
+  lt_term_sr_rhythm = CORRESPONDING #( lt_g_term_sr_rhythm ).
+  lt_act_deposit = CORRESPONDING #( lt_g_act_deposit ).
+  lt_partner = CORRESPONDING #( lt_g_partner ).
+  lt_option_rate = CORRESPONDING #( lt_g_option_rate ).
+  lt_object_rel = CORRESPONDING #( lt_g_object_rel ).
+  lt_meas_cn = CORRESPONDING #( lt_g_meas_cn ).
+  lt_condition = CORRESPONDING #( lt_g_condition ).
+  lt_resubm_rule = CORRESPONDING #( lt_g_resubm_rule ).
+  lt_status = CORRESPONDING #( lt_g_status ).
+*lt_extension_in
+  lt_term_withholding_tax = CORRESPONDING #( lt_g_term_withholding_tax ).
+  lt_term_withholding_tax_item = CORRESPONDING #( lt_g_term_withholding_tax_item ).
+  lt_cosettle_rule = CORRESPONDING #( lt_g_cosettle_rule ).
+  lt_term_payment_split = CORRESPONDING #( lt_g_term_payment_split ).
+  lt_term_evaluation = CORRESPONDING #( lt_g_term_evaluation ).
+  lt_term_evaluation_condition  = CORRESPONDING #( lt_g_term_evaluation_condition ).
+ENDFORM.
+
+
+FORM read_file TABLES lt_tdwkey TYPE tt_tdwkey
+               USING file_name  target_file_nm
+               CHANGING
+                        ls_header_record.
+  CHECK file_name IS NOT INITIAL.
+
+  DATA lv_filename TYPE string.
+  lv_filename = file_name.
+  DATA: lt_table TYPE TABLE OF string.
+
+  CALL METHOD cl_gui_frontend_services=>gui_upload
+    EXPORTING
+      filename                = lv_filename
+*     filetype                = 'ASC'
+*     has_field_separator     = SPACE
+*     header_length           = 0
+*     read_by_line            = 'X'
+*     dat_mode                = SPACE
+*     codepage                = SPACE
+*     ignore_cerr             = ABAP_TRUE
+*     replacement             = '#'
+*     virus_scan_profile      =
+*  IMPORTING
+*     filelength              =
+*     header                  =
+    CHANGING
+      data_tab                = lt_table[]
+*     isscanperformed         = SPACE
+    EXCEPTIONS
+      file_open_error         = 1
+      file_read_error         = 2
+      no_batch                = 3
+      gui_refuse_filetransfer = 4
+      invalid_type            = 5
+      no_authority            = 6
+      unknown_error           = 7
+      bad_data_format         = 8
+      header_not_allowed      = 9
+      separator_not_allowed   = 10
+      header_too_long         = 11
+      unknown_dp_error        = 12
+      access_denied           = 13
+      dp_out_of_memory        = 14
+      disk_full               = 15
+      dp_timeout              = 16
+      not_supported_by_gui    = 17
+      error_no_gui            = 18
+      OTHERS                  = 19.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+  IF lt_table[] IS NOT INITIAL.
+    ls_header_record = lt_table[ 1 ].  DELETE  lt_table INDEX 1.
+  ENDIF.
+
+
+
+  DATA ls_data TYPE string.
+  LOOP AT lt_table INTO ls_data.
+
+    SPLIT ls_data AT cl_abap_char_utilities=>horizontal_tab INTO TABLE DATA(lt_field_tdwkey).
+    APPEND INITIAL LINE TO lt_tdwkey ASSIGNING FIELD-SYMBOL(<ls_tbwkey>).
+    <ls_tbwkey>-data = ls_data.
+    <ls_tbwkey>-comp_code_ext = lt_field_tdwkey[ 1 ].
+    <ls_tbwkey>-old_contract_number = lt_field_tdwkey[ 2 ].
+  ENDLOOP.
+
+ENDFORM.
+
+FORM refresh_bapi_parameters.
+
+  lt_map_table = VALUE #(
+  ( counter = 1 bapi_field = 'COMP_CODE_EXT' data_field = 'GENERAL_DATA-COMP_CODE_EXT'  data_value = '' )
+
+  ( counter = 1 bapi_field = 'CONTRACT_TYPE' data_field = 'GENERAL_DATA-CONTRACT_TYPE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT_NUMBER_EXT' data_field = 'GENERAL_DATA-CONTRACT_NUMBER_EXT'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT-CONTRACT_TEXT' data_field = 'GENERAL_DATA-CONTRACT_TEXT'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT-CONTRACT_CONCLUSION_DATE' data_field = 'GENERAL_DATA-CONTRACT_CONCLUSION_DATE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT-SECOND_SIGNATURE_DATE' data_field = 'GENERAL_DATA-SECOND_SIGNATURE_DATE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT-CONTRACT_START_DATE' data_field = 'GENERAL_DATA-CONTRACT_START_DATE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT-FIRST_END_DATE' data_field = 'GENERAL_DATA-FIRST_END_DATE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT-OLD_CONTRACT_NUMBER' data_field = 'GENERAL_DATA-OLD_CONTRACT_NUMBER'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT-MAIN_CONTRACT_COMP_CODE' data_field = 'GENERAL_DATA-MAIN_CONTRACT_COMP_CODE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT-MAIN_CONTRACT_NUMBER' data_field = 'GENERAL_DATA-MAIN_CONTRACT_NUMBER'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT-CASH_FLOW_START_DATE' data_field = 'GENERAL_DATA-CASH_FLOW_START_DATE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT-POSTING_START_DATE' data_field = 'GENERAL_DATA-POSTING_START_DATE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONTRACT-VALUATION_RELEVANCE' data_field = 'GENERAL_DATA-VALUATION_RELEVANCE'  data_value = '' )
+
+  ( counter = 1 bapi_field = 'TERM_RENEWAL-RENEWAL_TYPE'  data_field = 'RENEWAL-RENEWAL_TYPE'  data_value = '' )
+
+  ( counter = 1 bapi_field = 'TERM_NOTICE-NOTICE_TYPE'  data_field = 'NOTICE-NOTICE_TYPE'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_NOTICE-NOTICE_PROCEDURE'  data_field = 'NOTICE-NOTICE_PROCEDURE'  data_value = '' )
+
+  ( counter = 1 bapi_field = 'TERM_RENEWAL_RULE-RENEWAL_RULE_TYPE'  data_field = 'RENEWAL-RENEWAL_RULE_TYPE'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RENEWAL_RULE-RENEWAL_RULE_NO'  data_field = 'RENEWAL-RENEWAL_RULE_NO'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RENEWAL_RULE-NUMBER_OF_RENEWALS'  data_field = 'RENEWAL-NUMBER_OF_RENEWALS'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RENEWAL_RULE-RENEW_NUM_YEARS'  data_field = 'RENEWAL-RENEW_NUM_YEARS'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RENEWAL_RULE-RENEW_NUM_MONTHS'  data_field = 'RENEWAL-RENEW_NUM_MONTHS'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RENEWAL_RULE-RENEW_NUM_DAYS'  data_field = 'RENEWAL-RENEW_NUM_DAYS'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RENEWAL_RULE-NOTIF_NUM_YEARS'  data_field = 'RENEWAL-NOTIF_NUM_YEARS'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RENEWAL_RULE-NOTIF_NUM_MONTHS'  data_field = 'RENEWAL-NOTIF_NUM_MONTHS'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RENEWAL_RULE-NOTIF_NUM_WEEKS'  data_field = 'RENEWAL-NOTIF_NUM_WEEKS'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RENEWAL_RULE-NOTIF_NUM_DAYS'  data_field = 'RENEWAL-NOTIF_NUM_DAYS'  data_value = '' )
+
+  ( counter = 1 bapi_field = 'TERM_NOTICE_OBJ-TERM_NO'  data_field = 'NOTICE-NOTICE_TYPE'  data_value = '0001' ) "hardcoded value
+  ( counter = 1 bapi_field = 'TERM_NOTICE_OBJ-NOTICE_TYPE'  data_field = 'NOTICE-NOTICE_TYPE'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_NOTICE_OBJ-NOTICE_PROCEDURE'  data_field = 'NOTICE-NOTICE_PROCEDURE'  data_value = '' )
+
+  ( counter = 1 bapi_field = 'TERM_ORG_ASSIGNMENT-BUS_AREA'  data_field = 'ORG_ASSIGN-BUS_AREA'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_ORG_ASSIGNMENT-PROFIT_CTR'  data_field = 'ORG_ASSIGN-PROFIT_CTR'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_ORG_ASSIGNMENT-FUND'  data_field = 'ORG_ASSIGN-FUND'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_ORG_ASSIGNMENT-FUNDS_CTR'  data_field = 'ORG_ASSIGN-FUNDS_CTR'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_ORG_ASSIGNMENT-CMMT_ITEM'  data_field = 'ORG_ASSIGN-CMMT_ITEM'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_ORG_ASSIGNMENT-FUNC_AREA'  data_field = 'ORG_ASSIGN-FUNC_AREA'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_ORG_ASSIGNMENT-GRANT_NBR'  data_field = 'ORG_ASSIGN-GRANT_NBR'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_ORG_ASSIGNMENT-BUDGETPERIOD'  data_field = 'ORG_ASSIGN-BUDGETPERIOD'  data_value = '' )
+
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-FREQUENCY'  data_field = 'FREQUENCY-FREQUENCY'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-FREQUENCY_UNIT'  data_field = 'FREQUENCY-FREQUENCY_UNIT'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-STARTING_WEEK'  data_field = 'FREQUENCY-STARTING_WEEK'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-STARTING_MONTH'  data_field = 'FREQUENCY-STARTING_MONTH'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-CONDITION_AMOUNT_REF'  data_field = 'FREQUENCY-CONDITION_AMOUNT_REF'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-CONDITION_AMOUNT_REF'  data_field = 'FREQUENCY-CONDITION_AMOUNT_REF'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-CONDITION_AMOUNT_DIFF'  data_field = 'FREQUENCY-CONDITION_AMOUNT_DIFF'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-PRO_RATA_METHOD'  data_field = 'FREQUENCY-PRO_RATA_METHOD'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-PRO_RATA_METHOD_CALCULATION'  data_field = 'FREQUENCY-PRO_RATA_METHOD_CALCULATION'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-PAYMENT_FORM'  data_field = 'FREQUENCY-PAYMENT_FORM'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-FREQUENCY_START'  data_field = 'FREQUENCY-FREQUENCY_START'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-DUE_DATE_CORR_RULE'  data_field = 'FREQUENCY-DUE_DATE_CORR_RULE'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-DUE_DATE_CORR_DAY'  data_field = 'FREQUENCY-DUE_DATE_CORR_DAY'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-DUE_DATE_CORR_MONTH'  data_field = 'FREQUENCY-DUE_DATE_CORR_MONTH'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-DUE_DATE_CORR_YEAR'  data_field = 'FREQUENCY-DUE_DATE_CORR_YEAR'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-DUE_DATE_CORR_CAL'  data_field = 'FREQUENCY-DUE_DATE_CORR_CAL'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-DUE_DATE_CORR_UNIT'  data_field = 'FREQUENCY-DUE_DATE_CORR_UNIT'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-FACTORY_CALENDAR'  data_field = 'FREQUENCY-FACTORY_CALENDAR'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-DUE_DATE_MOVE_BEGIN'  data_field = 'FREQUENCY-DUE_DATE_MOVE_BEGIN'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-DUE_DATE_MOVE_END'  data_field = 'FREQUENCY-DUE_DATE_MOVE_END'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_RHYTHM-FIXED_PERIOD'  data_field = 'FREQUENCY-FIXED_PERIOD'  data_value = '' )
+
+
+  ( counter = 1 bapi_field = 'PARTNER-PARTNER'  data_field = 'PARTNER-PARTNER'  data_value = '' )
+  ( counter = 1 bapi_field = 'PARTNER-ROLE_TYPE'  data_field = 'PARTNER-ROLE_TYPE'  data_value = '' )
+
+  ( counter = 1 bapi_field = 'OBJECT_REL-CONTRACT_OBJECT_TYPE'  data_field = 'OBJECTS-CONTRACT_OBJECT_TYPE'  data_value = '' )
+  ( counter = 1 bapi_field = 'OBJECT_REL-CONTRACT_OBJECT_ID'  data_field = 'OBJECTS-CONTRACT_OBJECT_ID'  data_value = '' )
+  ( counter = 1 bapi_field = 'OBJECT_REL-CONTRACT_SUBJECT_TEXT'  data_field = 'OBJECTS-CONTRACT_SUBJECT_TEXT'  data_value = '' )
+  ( counter = 1 bapi_field = 'OBJECT_REL-OBJECT_TYPE_ACCT'  data_field = 'OBJECTS-OBJECT_TYPE_ACCT'  data_value = '' )
+  ( counter = 1 bapi_field = 'OBJECT_REL-OBJECT_ID_ACCT'  data_field = 'OBJECTS-OBJECT_ID_ACCT'  data_value = '' )
+  ( counter = 1 bapi_field = 'OBJECT_REL-CONTRACT_SUBJECT_TYPE'  data_field = 'OBJECTS-CONTRACT_SUBJECT_TYPE'  data_value = '' )
+
+  ( counter = 1 bapi_field = 'CONDITION-CONDITION_TYPE'  data_field = 'CONDITIONS-CONDITION_TYPE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONDITION-CALCULATION_OBJECT_TYPE'  data_field = 'CONDITIONS-CALCULATION_OBJECT_TYPE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONDITION-CALCULATION_OBJECT_ID'  data_field = 'CONDITIONS-CALCULATION_OBJECT_ID'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONDITION-VALID_FROM'  data_field = 'CONDITIONS-VALID_FROM'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONDITION-VALID_TO'  data_field = 'CONDITIONS-VALID_TO'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONDITION-UNIT_PRICE'  data_field = 'CONDITIONS-UNIT_PRICE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONDITION-CALC_RULE'  data_field = 'CONDITIONS-CALC_RULE'  data_value = '' )
+  ( counter = 1 bapi_field = 'CONDITION-EXTERNAL_PURPOSE'  data_field = 'CONDITIONS-EXTERNAL_PURPOSE'  data_value = '' )
+
+  ( counter = 1 bapi_field = 'TERM_EVALUATION-RULE_OBJECT_TYPE'  data_field = 'VALUATION-RULE_OBJECT_TYPE'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_EVALUATION-RULE_OBJECT_ID'  data_field = 'VALUATION-RULE_OBJECT_ID'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_EVALUATION-VALUATION_RULE'  data_field = 'VALUATION-VALUATION_RULE'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_EVALUATION-START_DATE_OF_CONSIDERATION'  data_field = 'VALUATION-START_DATE_OF_CONSIDERATION'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_EVALUATION-INTEREST_RATE'  data_field = 'VALUATION-INTEREST_RATE'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_EVALUATION-NUMBER_OF_FREQUENCY_TERM'  data_field = 'VALUATION-NUMBER_OF_FREQUENCY_TERM'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_EVALUATION-PROBABLE_END'  data_field = 'VALUATION-PROBABLE_END_DATE'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_EVALUATION-ACCT_OBJECT_TYPE'  data_field = 'VALUATION-ACCT_OBJECT_TYPE'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_EVALUATION-ACCT_OBJECT_ID'  data_field = 'VALUATION-ACCT_OBJECT_ID'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_EVALUATION-END_DATE_OF_USAGE'  data_field = 'VALUATION-END_DATE_OF_USAGE'  data_value = '' )
+
+
+*  ( counter = 1 bapi_field = 'TERM_EVALUATION_CONDITION-CONDITION_TYPE'  data_field = 'CONDITIONS-CONDITION_TYPE'  data_value = '' )
+*  ( counter = 1 bapi_field = 'TERM_EVALUATION_CONDITION-CALCULATION_OBJECT_TYPE'  data_field = 'CONDITIONS-CALCULATION_OBJECT_TYPE'  data_value = '' )
+*  ( counter = 1 bapi_field = 'TERM_EVALUATION_CONDITION-CALCULATION_OBJECT_ID'  data_field = 'CONDITIONS-CALCULATION_OBJECT_ID'  data_value = '' )
+*  ( counter = 1 bapi_field = 'TERM_EVALUATION_CONDITION-VALID_FROM'  data_field = 'CONDITIONS-VALID_FROM'  data_value = '' )
+  ( counter = 1 bapi_field = 'TERM_EVALUATION_CONDITION-CONDITION_CONSIDERATION'  data_field = 'VALUATION-CONDITION_CONSIDERATION'  data_value = '' ) "O
+  ( counter = 1 bapi_field = 'TERM_EVALUATION_CONDITION-ABSOLUTE_SHARE_OF_CONDITION'  data_field = 'VALUATION-PERCENTAGE_SHARE_OF_CONDITION'  data_value = '' )
+
+
+   ).
+
+
+  CLEAR :
+        lv_comp_code_ext               ,
+        lv_contract_type               ,
+        lv_contract_number_ext         ,
+        ls_contract                    ,
+        ls_term_renewal                ,
+        ls_term_notice                 ,
+        lv_trans                       ,
+        lv_cosettle_param              ,
+
+        lv_comp_code                   ,
+        lv_contract_number             .
+
+
+  REFRESH :
+        lt_term_renewal_rule           ,
+        lt_term_notice_obj             ,
+        lt_term_notice_rule            ,
+        lt_term_object_rel             ,
+        lt_term_org_assignment         ,
+        lt_term_payment                ,
+        lt_term_rhythm                 ,
+        lt_term_adjustment             ,
+        lt_term_sr_reporting           ,
+        lt_term_sr_sales               ,
+        lt_term_sr_peak_sales          ,
+        lt_term_sr_rhythm              ,
+        lt_act_deposit                 ,
+        lt_partner                     ,
+        lt_option_rate                 ,
+        lt_object_rel                  ,
+        lt_meas_cn                     ,
+        lt_condition                   ,
+        lt_resubm_rule                 ,
+        lt_status                      ,
+        lt_extension_in                ,
+*        lt_return                      ,
+        lt_term_withholding_tax        ,
+        lt_term_withholding_tax_item   ,
+        lt_cosettle_rule               ,
+        lt_term_payment_split          ,
+        lt_term_evaluation             ,
+        lt_term_evaluation_condition   .
+
+
+ENDFORM.
+
