@@ -1,0 +1,24 @@
+*&---------------------------------------------------------------------*
+*& Report ZRE_CONTRACT_CONV
+*&---------------------------------------------------------------------*
+*& Initial Transport
+*& --ECDK953610       L1KRISHNAPPA Real Estate conversion program
+*&---------------------------------------------------------------------*
+REPORT zre_contract_conv.
+
+INCLUDE zre_contract_conv_top.
+INCLUDE zre_contract_conv_sel.
+
+**//----------------------  Desktop Upload
+IF p_local = abap_true.
+
+  PERFORM read_files.
+
+  PERFORM process_files.
+
+  PERFORM display_alv_output.
+
+ENDIF.
+*//--------------- End
+
+INCLUDE zre_contract_conv_forms.
