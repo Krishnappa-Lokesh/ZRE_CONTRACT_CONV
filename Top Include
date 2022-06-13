@@ -1,0 +1,155 @@
+*&---------------------------------------------------------------------*
+*& Include          ZRE_CONTRACT_CONV_TOP
+*&---------------------------------------------------------------------*
+TABLES: sscrfields.
+
+TYPE-POOLS: slis, icon.
+DATA: lt_fieldcat TYPE slis_t_fieldcat_alv.
+
+TYPES: BEGIN OF t_alv_output,
+         light(4)            TYPE c,
+         color_line(4)       TYPE c,
+         tcolor              TYPE slis_t_specialcol_alv,    "cell
+         comp_code_ext       TYPE  bukrs,
+         contract_type       TYPE  recncontracttype,
+         old_contract_number TYPE  vvosmive,
+         comp_code           TYPE  bukrs,
+         contract_number     TYPE  recnnumber,
+         type                TYPE  bapi_mtype,
+         id                  TYPE  symsgid,
+         number              TYPE  symsgno,
+         message             TYPE  bapi_msg,
+       END OF t_alv_output.
+
+TYPES: BEGIN OF t_map_table,
+         counter    TYPE sy-tabix,
+         bapi_field TYPE char100,
+         data_field TYPE char100,
+         data_value TYPE char100,
+       END OF t_map_table.
+
+TYPES: BEGIN OF t_tdwkey,
+         comp_code_ext       TYPE bukrs,
+         old_contract_number TYPE  vvosmive,
+         data                TYPE string,
+       END OF t_tdwkey.
+
+
+TYPES: tt_map_table TYPE TABLE OF t_map_table.
+TYPES: tt_alv_output TYPE TABLE OF t_alv_output.
+TYPES: tt_tdwkey TYPE TABLE OF t_tdwkey.
+
+
+
+DATA: lv_comp_code_ext               TYPE bukrs,
+      lv_contract_type               TYPE recncontracttype,
+      lv_contract_number_ext         TYPE recnnumber,
+      ls_contract                    TYPE bapi_re_contract_dat,
+      ls_term_renewal                TYPE bapi_re_term_rn_dat,
+      ls_term_notice                 TYPE bapi_re_term_nt_dat,
+      lv_trans                       TYPE j_vorgang,
+      lv_test_run                    TYPE testrun,
+      lv_cosettle_param              TYPE bapi_re_cosettle_par_dat,
+
+      lv_comp_code                   TYPE bukrs,
+      lv_contract_number             TYPE recnnumber,
+
+      lt_term_renewal_rule           TYPE TABLE OF  bapi_re_term_rn_rule_dat,
+      lt_term_notice_obj             TYPE TABLE OF bapi_re_term_nt_obj_dat,
+      lt_term_notice_rule            TYPE TABLE OF bapi_re_term_nt_rule_dat,
+      lt_term_object_rel             TYPE TABLE OF bapi_re_term_objrel_dat,
+      lt_term_org_assignment         TYPE TABLE OF bapi_re_term_oa_dat,
+      lt_term_payment                TYPE TABLE OF bapi_re_term_py_dat,
+      lt_term_rhythm                 TYPE TABLE OF bapi_re_term_rh_dat,
+      lt_term_adjustment             TYPE TABLE OF bapi_re_term_aj_dat,
+      lt_term_sr_reporting           TYPE TABLE OF bapi_re_term_sr_rep_dat,
+      lt_term_sr_sales               TYPE TABLE OF bapi_re_term_sr_sl_dat,
+      lt_term_sr_peak_sales          TYPE TABLE OF bapi_re_term_sr_ps_dat,
+      lt_term_sr_rhythm              TYPE TABLE OF bapi_re_term_sr_rh_dat,
+      lt_act_deposit                 TYPE TABLE OF bapi_re_act_deposit_dat,
+      lt_partner                     TYPE TABLE OF bapi_re_partner_dat,
+      lt_option_rate                 TYPE TABLE OF bapi_re_option_rate_dat,
+      lt_object_rel                  TYPE TABLE OF bapi_re_object_rel_dat,
+      lt_meas_cn                     TYPE TABLE OF bapi_re_meas_cn_dat,
+      lt_condition                   TYPE TABLE OF bapi_re_condition_dat,
+      lt_resubm_rule                 TYPE TABLE OF bapi_re_resubm_rule_dat,
+      lt_status                      TYPE TABLE OF bapi_re_status_dat,
+      lt_extension_in                TYPE TABLE OF bapiparex,
+      lt_return                      TYPE TABLE OF bapiret2,
+      lt_term_withholding_tax        TYPE TABLE OF bapi_re_term_wt_dat,
+      lt_term_withholding_tax_item   TYPE TABLE OF bapi_re_term_wt_item_dat,
+      lt_cosettle_rule               TYPE TABLE OF bapi_re_cosettle_rl_dat,
+      lt_term_payment_split          TYPE TABLE OF bapi_re_term_pysplit_dat,
+      lt_term_evaluation             TYPE TABLE OF bapi_re_term_ce_dat,
+      lt_term_evaluation_condition   TYPE TABLE OF bapi_re_term_cecond_dat,
+
+*// importing for getDetail
+      ls_g_contract                   TYPE bapi_re_contract,
+      ls_g_term_renewal               TYPE bapi_re_term_rn,
+      ls_g_term_notice               TYPE bapi_re_term_nt,
+      ls_g_cosettle_param             TYPE bapi_re_cosettle_par,
+
+*//-- Tables for getDetails
+      lt_g_term_renewal_rule         TYPE TABLE OF bapi_re_term_rn_rule,
+      lt_g_term_notice_obj           TYPE TABLE OF bapi_re_term_nt_obj,
+      lt_g_term_notice_rule          TYPE TABLE OF bapi_re_term_nt_rule,
+      lt_g_term_object_rel           TYPE TABLE OF bapi_re_term_objrel,
+      lt_g_term_org_assignment       TYPE TABLE OF bapi_re_term_oa,
+      lt_g_term_payment              TYPE TABLE OF bapi_re_term_py,
+      lt_g_term_rhythm               TYPE TABLE OF bapi_re_term_rh,
+      lt_g_term_adjustment           TYPE TABLE OF bapi_re_term_aj,
+      lt_g_term_sr_reporting         TYPE TABLE OF bapi_re_term_sr_rep,
+      lt_g_term_sr_sales             TYPE TABLE OF bapi_re_term_sr_sl,
+      lt_g_term_sr_peak_sales        TYPE TABLE OF bapi_re_term_sr_ps,
+      lt_g_term_sr_rhythm            TYPE TABLE OF bapi_re_term_sr_rh,
+      lt_g_act_deposit               TYPE TABLE OF bapi_re_act_deposit,
+      lt_g_partner                   TYPE TABLE OF bapi_re_partner,
+      lt_g_option_rate               TYPE TABLE OF bapi_re_option_rate,
+      lt_g_object_rel                TYPE TABLE OF bapi_re_object_rel,
+      lt_g_meas_cn                   TYPE TABLE OF bapi_re_meas_cn,
+      lt_g_condition                 TYPE TABLE OF bapi_re_condition,
+      lt_g_cond_calc                 TYPE TABLE OF bapi_re_cond_calc,
+      lt_g_cond_dist                 TYPE TABLE OF bapi_re_cond_dist,
+      lt_g_resubm_rule               TYPE TABLE OF bapi_re_resubm_rule,
+      lt_g_resubm_date               TYPE TABLE OF bapi_re_resubm_date,
+      lt_g_status                    TYPE TABLE OF bapi_re_status,
+      lt_g_extension_out             TYPE TABLE OF bapiparex,
+      lt_g_return                    TYPE TABLE OF bapiret2,
+      lt_g_term_withholding_tax      TYPE TABLE OF bapi_re_term_wt,
+      lt_g_term_withholding_tax_item TYPE TABLE OF bapi_re_term_wt_item,
+      lt_g_cosettle_rule             TYPE TABLE OF bapi_re_cosettle_rl,
+      lt_g_term_payment_split        TYPE TABLE OF bapi_re_term_pysplit,
+      lt_g_term_evaluation           TYPE TABLE OF bapi_re_term_ce,
+      lt_g_term_evaluation_condition TYPE TABLE OF bapi_re_term_cecond.
+
+
+
+
+DATA: lt_map_table TYPE tt_map_table.
+
+DATA: lt_alv_table TYPE tt_alv_output.
+
+DATA    lt_tdwkey01         TYPE tt_tdwkey.
+DATA    lt_tdwkey02         TYPE tt_tdwkey.
+DATA    lt_tdwkey03         TYPE tt_tdwkey.
+DATA    lt_tdwkey04         TYPE tt_tdwkey.
+DATA    lt_tdwkey05         TYPE tt_tdwkey.
+DATA    lt_tdwkey06         TYPE tt_tdwkey.
+DATA    lt_tdwkey07         TYPE tt_tdwkey.
+DATA    lt_tdwkey08         TYPE tt_tdwkey.
+DATA    lt_tdwkey09         TYPE tt_tdwkey.
+DATA    lt_tdwkey10         TYPE tt_tdwkey.
+DATA    lt_tdwkey11         TYPE tt_tdwkey.
+
+
+DATA: ls_header_record01 TYPE string.
+DATA: ls_header_record02 TYPE string.
+DATA: ls_header_record03 TYPE string.
+DATA: ls_header_record04 TYPE string.
+DATA: ls_header_record05 TYPE string.
+DATA: ls_header_record06 TYPE string.
+DATA: ls_header_record07 TYPE string.
+DATA: ls_header_record08 TYPE string.
+DATA: ls_header_record09 TYPE string.
+DATA: ls_header_record10 TYPE string.
+DATA: ls_header_record11 TYPE string.
